@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id          String @id @default(uuid())
+  totalAmount Float
+  totalItems  Int
+
+  status         OrderStatus @default(PENDING)
+  paid           Boolean     @default(false)
+  paidAt         DateTime? // Se puede tener otra tabla con las ordenes que ya están pagadas para evitar tener que insertar null en db
+  stripeChargeId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  OrderItem    OrderItem[]
+  OrderReceipt OrderReceipt? // Se usa así para indicar relación uno a uno.
+}
+
+model OrderItem {
+  id        String @id @default(uuid())
+  productId String
+  quantity  Int
+  price     Float // El precio se mantiene tal como estaba al crearse, ya que puede ir cambiando con el tiempo. Por esa razón, no se consulta en la DB cada vez.
+
+  Order   Order?  @relation(fields: [orderId], references: [id])
+  orderId String?
+}
+
+model OrderReceipt {
+  id String @id @default(uuid())
+
+  order   Order  @relation(fields: [orderId], references: [id])
+  orderId String @unique // Se establece que es único para indicar la relación uno a uno
+
+  receiptUrl String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
