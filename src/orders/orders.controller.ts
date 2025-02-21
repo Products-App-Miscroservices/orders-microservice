@@ -1,5 +1,5 @@
-import { Controller, ParseUUIDPipe } from '@nestjs/common';
-import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
+import { Controller, HttpStatus, ParseUUIDPipe } from '@nestjs/common';
+import { EventPattern, MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderPaginationDto } from './dto/order-pagination.dto';
@@ -14,13 +14,22 @@ export class OrdersController {
   @MessagePattern('orders.create')
   async create(@Payload() createOrderDto: CreateOrderDto) {
 
-    const order = await this.ordersService.create(createOrderDto);
-    const paymentSession = await this.ordersService.createPaymentSession(order)
+    try {
+      const order = await this.ordersService.create(createOrderDto);
+      const paymentSession = await this.ordersService.createPaymentSession(order)
 
-    return {
-      order,
-      paymentSession,
+      return {
+        order,
+        paymentSession,
+      }
+    } catch (error) {
+      throw new RpcException({
+        status: HttpStatus.BAD_REQUEST,
+        message: `${error}`
+      })
     }
+
+
   }
 
   @MessagePattern('orders.find.all')

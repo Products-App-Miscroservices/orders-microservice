@@ -31,7 +31,7 @@ export class OrdersService extends PrismaClient implements OnModuleInit {
             // 1. Confirmar ids de productos
             const productIds = createOrderDto.items.map(items => items.productId);
             const products = await firstValueFrom(
-                this.client.send({ cmd: 'validate_products' }, productIds)
+                this.client.send('products.validate', productIds)
             );
 
             // 2. Cálculo de valores. 
@@ -79,7 +79,7 @@ export class OrdersService extends PrismaClient implements OnModuleInit {
                 ...order,
                 OrderItem: order.OrderItem.map((orderItem) => ({
                     ...orderItem,
-                    name: products.find(product => product.id === orderItem.productId).name
+                    name: products.find(product => product.id === orderItem.productId).title
                 }))
             }
 
@@ -87,7 +87,7 @@ export class OrdersService extends PrismaClient implements OnModuleInit {
             // A modo de no dar mucha info en la respuesta se deja la siguiente
             throw new RpcException({
                 status: HttpStatus.BAD_REQUEST,
-                message: 'Check logs'
+                message: `${error}`
             })
         }
     }
@@ -143,7 +143,7 @@ export class OrdersService extends PrismaClient implements OnModuleInit {
 
         const productIds = order.OrderItem.map((item) => item.productId);
         const products = await firstValueFrom(
-            this.client.send({ cmd: 'validate_products' }, productIds)
+            this.client.send('products.validate', productIds)
         )
 
         return {
