@@ -4,6 +4,7 @@
 /build
 
 postgres/
+postgres-data/
 
 # Logs
 logs
