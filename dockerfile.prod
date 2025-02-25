@@ -12,6 +12,9 @@ RUN npm install
 # Builder
 FROM node:22-alpine3.19 as build 
 
+ARG ORDERS_DATABASE_URL
+ENV DATABASE_URL=$ORDERS_DATABASE_URL
+
 WORKDIR /usr/src/app
 
 ## COPY --from=deps origin dest
